@@ -17,7 +17,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -25,8 +27,13 @@ export default function LoginPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
+      if (email !== "genet@ithiopica.eatery") {
+        throw new Error("Access denied. Only authorized admin can login.")
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,15 +50,52 @@ export default function LoginPage() {
     }
   }
 
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setError("Please enter your email address first")
+      return
+    }
+
+    if (email !== "genet@ithiopica.eatery") {
+      setError("Password reset is only available for authorized admin")
+      return
+    }
+
+    setIsResetting(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const supabase = createClient()
+
+      // Call the custom function to handle password reset
+      const { data, error } = await supabase.rpc("send_admin_password_reset", {
+        user_email: email,
+      })
+
+      if (error) throw error
+
+      if (data?.error) {
+        throw new Error(data.error)
+      }
+
+      setSuccess(`Password reset instructions have been sent to ${data.notification_email}`)
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to send reset email")
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card>
+        <Card className="border-secondary/20">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4">
-              <ChefHat className="w-6 h-6 text-rose-600" />
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <ChefHat className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Admin Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-secondary">Admin Login</CardTitle>
             <CardDescription className="text-gray-600">Sign in to access the restaurant dashboard</CardDescription>
           </CardHeader>
           <CardContent>
@@ -61,10 +105,11 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@bellavista.com"
+                  placeholder="genet@ithiopica.eatery"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="border-secondary/20 focus:border-primary"
                 />
               </div>
               <div>
@@ -75,6 +120,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="border-secondary/20 focus:border-primary"
                 />
               </div>
 
@@ -84,7 +130,13 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full bg-rose-600 hover:bg-rose-700" disabled={isLoading}>
+              {success && (
+                <Alert className="border-primary/20 bg-primary/5">
+                  <AlertDescription className="text-primary">{success}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -96,12 +148,26 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-600">
-              Need an admin account?{" "}
-              <Link href="/auth/sign-up" className="text-rose-600 hover:text-rose-700 underline">
-                Contact management
-              </Link>
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-secondary/20 text-secondary hover:bg-secondary/5 bg-transparent"
+                onClick={handlePasswordReset}
+                disabled={isResetting}
+              >
+                {isResetting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending reset email...
+                  </>
+                ) : (
+                  "Reset Password"
+                )}
+              </Button>
             </div>
+
+            <div className="mt-6 text-center text-sm text-gray-600">Authorized admin access only</div>
 
             <div className="mt-4 text-center">
               <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">

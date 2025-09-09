@@ -2,16 +2,16 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background py-16 px-6">
+    <footer className="bg-secondary text-white py-16 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Restaurant Info */}
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">Bella Vista Restaurant</h3>
-            <p className="text-background/80 mb-4 leading-relaxed">
+            <p className="text-white/80 mb-4 leading-relaxed">
               Authentic Italian cuisine in the heart of downtown. Experience the finest flavors and warmest hospitality.
             </p>
-            <div className="space-y-2 text-background/80">
+            <div className="space-y-2 text-white/80">
               <p>123 Main Street, Downtown, NY 10001</p>
               <p>Phone: (555) 123-4567</p>
               <p>Email: info@bellavista.com</p>
@@ -21,7 +21,7 @@ export function Footer() {
           {/* Hours */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Hours</h4>
-            <div className="space-y-2 text-background/80 text-sm">
+            <div className="space-y-2 text-white/80 text-sm">
               <div className="flex justify-between">
                 <span>Mon - Thu</span>
                 <span>5:00 PM - 10:00 PM</span>
@@ -41,23 +41,23 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <div className="space-y-2">
-              <Link href="/menu" className="block text-background/80 hover:text-background transition-colors">
+              <Link href="/menu" className="block text-white/80 hover:text-white transition-colors">
                 Menu
               </Link>
-              <Link href="/reservations" className="block text-background/80 hover:text-background transition-colors">
+              <Link href="/reservations" className="block text-white/80 hover:text-white transition-colors">
                 Reservations
               </Link>
-              <Link href="/about" className="block text-background/80 hover:text-background transition-colors">
+              <Link href="/about" className="block text-white/80 hover:text-white transition-colors">
                 About Us
               </Link>
-              <Link href="/contact" className="block text-background/80 hover:text-background transition-colors">
+              <Link href="/contact" className="block text-white/80 hover:text-white transition-colors">
                 Contact
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-background/20 pt-8 text-center text-background/60">
+        <div className="border-t border-white/20 pt-8 text-center text-white/60">
           <p>&copy; 2024 Bella Vista Restaurant. All rights reserved.</p>
         </div>
       </div>

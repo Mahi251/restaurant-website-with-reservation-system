@@ -4,75 +4,76 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color tokens to match restaurant design brief */
+  /* Updated to minimal white/green/brown color scheme */
   --background: #ffffff;
-  --foreground: #475569;
-  --card: #fdf2f8;
-  --card-foreground: #374151;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
   --popover: #ffffff;
-  --popover-foreground: #475569;
-  --primary: #be123c;
+  --popover-foreground: #1f2937;
+  --primary: #064635;
   --primary-foreground: #ffffff;
-  --secondary: #ec4899;
+  --secondary: #8b5e3c;
   --secondary-foreground: #ffffff;
-  --muted: #f0fdf4;
-  --muted-foreground: #374151;
-  --accent: #ec4899;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+  --accent: #064635;
   --accent-foreground: #ffffff;
-  --destructive: #ff4d4d;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #f9fafb;
-  --ring: rgba(190, 18, 60, 0.5);
-  --chart-1: #ec4899;
-  --chart-2: #fbbf24;
-  --chart-3: #34d399;
-  --chart-4: #60a5fa;
-  --chart-5: #fca5a1;
+  --ring: rgba(6, 70, 53, 0.3);
+  --chart-1: #064635;
+  --chart-2: #8b5e3c;
+  --chart-3: #059669;
+  --chart-4: #0891b2;
+  --chart-5: #7c3aed;
   --radius: 0.5rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #374151;
-  --sidebar-primary: #fdf2f8;
-  --sidebar-primary-foreground: #374151;
-  --sidebar-accent: #ec4899;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #f9fafb;
+  --sidebar-primary-foreground: #1f2937;
+  --sidebar-accent: #064635;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: rgba(190, 18, 60, 0.5);
+  --sidebar-ring: rgba(6, 70, 53, 0.3);
 }
 
 .dark {
-  --background: #1f2937;
-  --foreground: #f9fafb;
-  --card: #374151;
-  --card-foreground: #f9fafb;
-  --popover: #374151;
-  --popover-foreground: #f9fafb;
-  --primary: #ec4899;
+  /* Updated dark mode to complement white/green/brown theme */
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #10b981;
   --primary-foreground: #ffffff;
-  --secondary: #be123c;
+  --secondary: #a16207;
   --secondary-foreground: #ffffff;
-  --muted: #4b5563;
-  --muted-foreground: #d1d5db;
-  --accent: #ec4899;
+  --muted: #334155;
+  --muted-foreground: #cbd5e1;
+  --accent: #10b981;
   --accent-foreground: #ffffff;
-  --destructive: #ff6b6b;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #4b5563;
-  --input: #374151;
-  --ring: rgba(236, 72, 153, 0.5);
-  --chart-1: #ec4899;
-  --chart-2: #fbbf24;
-  --chart-3: #34d399;
-  --chart-4: #60a5fa;
-  --chart-5: #fca5a1;
-  --sidebar: #1f2937;
-  --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #374151;
-  --sidebar-primary-foreground: #f9fafb;
-  --sidebar-accent: #ec4899;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: rgba(16, 185, 129, 0.3);
+  --chart-1: #10b981;
+  --chart-2: #a16207;
+  --chart-3: #16a34a;
+  --chart-4: #0ea5e9;
+  --chart-5: #8b5cf6;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #1e293b;
+  --sidebar-primary-foreground: #f1f5f9;
+  --sidebar-accent: #10b981;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #4b5563;
-  --sidebar-ring: rgba(236, 72, 153, 0.5);
+  --sidebar-border: #334155;
+  --sidebar-ring: rgba(16, 185, 129, 0.3);
 }
 
 @theme inline {

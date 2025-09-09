@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export const metadata: Metadata = {
   title: "Bella Vista Restaurant - Authentic Italian Cuisine",
@@ -21,7 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        <Header />
+        <Suspense fallback={<div>Loading...</div>}>
+          <main className="min-h-screen">{children}</main>
+        </Suspense>
+        <Footer />
         <Analytics />
       </body>
     </html>
