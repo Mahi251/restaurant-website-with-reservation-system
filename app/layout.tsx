@@ -9,10 +9,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 
 export const metadata: Metadata = {
-  title: "Bella Vista Restaurant - Authentic Italian Cuisine",
-  description:
-    "Experience authentic Italian cuisine in an elegant atmosphere. Reserve your table today at Bella Vista Restaurant in downtown.",
-  generator: "v0.app",
+  title: "Ithiopica cafe & eatery - Authentic Ethiopian Cuisine",
 }
 
 export default function RootLayout({
