@@ -1,8 +1,31 @@
-import { updateSession } from "@/lib/supabase/middleware"
-import type { NextRequest } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  /*
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    // Check for admin session in cookies
+    const adminSession = request.cookies.get("admin-session")
+
+    if (!adminSession || adminSession.value !== "authenticated") {
+      // Redirect to login if not authenticated
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      return NextResponse.redirect(url)
+    }
+  }
+
+  if (request.nextUrl.pathname.startsWith("/auth")) {
+    const adminSession = request.cookies.get("admin-session")
+
+    if (adminSession && adminSession.value === "authenticated") {
+      const url = request.nextUrl.clone()
+      url.pathname = "/admin"
+      return NextResponse.redirect(url)
+    }
+  }
+  */
+
+  return NextResponse.next()
 }
 
 export const config = {
