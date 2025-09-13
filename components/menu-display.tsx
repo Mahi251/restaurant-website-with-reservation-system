@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface MenuItem {
   id: string
@@ -25,14 +26,58 @@ interface MenuCategory {
 
 interface MenuDisplayProps {
   categories: MenuCategory[]
+  isLoading?: boolean
 }
 
-export function MenuDisplay({ categories }: MenuDisplayProps) {
+export function MenuDisplay({ categories, isLoading = false }: MenuDisplayProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   const filteredCategories = selectedCategory
     ? categories.filter((category) => category.id === selectedCategory)
     : categories
+
+  if (isLoading) {
+    return (
+      <div className="space-y-12">
+        {/* Category Filter Skeleton */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-10 w-24 rounded-full" />
+          ))}
+        </div>
+
+        {/* Menu Items Skeleton */}
+        <div className="space-y-8">
+          <div className="text-center space-y-3">
+            <Skeleton className="h-10 w-48 mx-auto" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Card key={index} className="shadow-md">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-8 w-16" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-12">
@@ -42,7 +87,7 @@ export function MenuDisplay({ categories }: MenuDisplayProps) {
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             onClick={() => setSelectedCategory(null)}
-            className="rounded-full"
+            className="rounded-full shadow-md hover:shadow-lg transition-all duration-300"
           >
             All Categories
           </Button>
@@ -51,7 +96,7 @@ export function MenuDisplay({ categories }: MenuDisplayProps) {
               key={category.id}
               variant={selectedCategory === category.id ? "default" : "outline"}
               onClick={() => setSelectedCategory(category.id)}
-              className="rounded-full"
+              className="rounded-full shadow-md hover:shadow-lg transition-all duration-300"
             >
               {category.name}
             </Button>
@@ -94,7 +139,7 @@ export function MenuDisplay({ categories }: MenuDisplayProps) {
 
 function MenuItemCard({ item }: { item: MenuItem }) {
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300">
+    <Card className="group hover:shadow-xl transition-all duration-300 shadow-md hover:-translate-y-1">
       <CardContent className="p-6">
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">

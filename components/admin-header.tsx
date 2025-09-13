@@ -42,7 +42,7 @@ export function AdminHeader({ userEmail }: AdminHeaderProps) {
         <div className="flex justify-between items-center py-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">Ithiopica Coffee & Eatery Management</p>
+            <p className="text-gray-600">Bella Vista Restaurant Management</p>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="bg-rose-100 text-rose-800">

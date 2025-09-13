@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Reservation ID and OTP are required" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
+    const supabase = createServerClient()
 
     // Get the reservation with OTP details
     const { data: reservation, error: fetchError } = await supabase

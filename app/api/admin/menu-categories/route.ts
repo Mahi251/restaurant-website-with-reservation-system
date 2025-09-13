@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createServerClient()
+    const supabase = createServerClient()
 
     // Get distinct categories from menu_items table
     const { data: categories, error } = await supabase.from("menu_items").select("category").not("category", "is", null)

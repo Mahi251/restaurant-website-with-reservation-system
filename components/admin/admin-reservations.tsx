@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Eye, Trash2, Search, Filter, Calendar, Clock, Users, Phone, Mail } from "lucide-react"
+import { Eye, Trash2, Search, Filter, Calendar, Clock, Users, Phone, Mail, ScaleIcon as Skeleton } from "lucide-react"
 
 interface Reservation {
   id: string
@@ -37,6 +37,7 @@ export function AdminReservations() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReservations()
@@ -57,6 +58,7 @@ export function AdminReservations() {
   }
 
   const updateReservationStatus = async (id: string, status: string) => {
+    setUpdatingStatus(id)
     try {
       const response = await fetch(`/api/admin/reservations/${id}`, {
         method: "PATCH",
@@ -69,6 +71,8 @@ export function AdminReservations() {
       }
     } catch (error) {
       console.error("Error updating reservation:", error)
+    } finally {
+      setUpdatingStatus(null)
     }
   }
 
@@ -126,7 +130,7 @@ export function AdminReservations() {
   }
 
   return (
-    <Card>
+    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader>
         <CardTitle>Reservation Management</CardTitle>
         <CardDescription>View and manage all restaurant reservations</CardDescription>
@@ -161,7 +165,7 @@ export function AdminReservations() {
         </div>
 
         {/* Reservations Table */}
-        <div className="border rounded-lg">
+        <div className="border rounded-lg shadow-md">
           <Table>
             <TableHeader>
               <TableRow>
@@ -174,14 +178,35 @@ export function AdminReservations() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-                      <span>Loading reservations...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8 rounded" />
+                        <Skeleton className="h-8 w-8 rounded" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : filteredReservations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">
@@ -190,7 +215,7 @@ export function AdminReservations() {
                 </TableRow>
               ) : (
                 filteredReservations.map((reservation) => (
-                  <TableRow key={reservation.id}>
+                  <TableRow key={reservation.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <TableCell>
                       <div>
                         <div className="font-medium">{reservation.customer_name}</div>
@@ -223,7 +248,12 @@ export function AdminReservations() {
                       <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedReservation(reservation)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedReservation(reservation)}
+                              className="hover:shadow-md transition-all duration-200"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -276,24 +306,48 @@ export function AdminReservations() {
                                     <Button
                                       onClick={() => updateReservationStatus(selectedReservation.id, "confirmed")}
                                       className="flex-1 bg-green-600 hover:bg-green-700"
+                                      disabled={updatingStatus === selectedReservation.id}
                                     >
-                                      Confirm
+                                      {updatingStatus === selectedReservation.id ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                                          Confirming...
+                                        </div>
+                                      ) : (
+                                        "Confirm"
+                                      )}
                                     </Button>
                                   )}
                                   {selectedReservation.status === "confirmed" && (
                                     <Button
                                       onClick={() => updateReservationStatus(selectedReservation.id, "completed")}
                                       className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                      disabled={updatingStatus === selectedReservation.id}
                                     >
-                                      Mark Complete
+                                      {updatingStatus === selectedReservation.id ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                                          Completing...
+                                        </div>
+                                      ) : (
+                                        "Mark Complete"
+                                      )}
                                     </Button>
                                   )}
                                   <Button
                                     variant="outline"
                                     onClick={() => updateReservationStatus(selectedReservation.id, "cancelled")}
                                     className="flex-1"
+                                    disabled={updatingStatus === selectedReservation.id}
                                   >
-                                    Cancel
+                                    {updatingStatus === selectedReservation.id ? (
+                                      <div className="flex items-center gap-2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                                        Cancelling...
+                                      </div>
+                                    ) : (
+                                      "Cancel"
+                                    )}
                                   </Button>
                                 </div>
                               </div>
@@ -304,7 +358,7 @@ export function AdminReservations() {
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteReservation(reservation.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 hover:shadow-md transition-all duration-200"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

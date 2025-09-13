@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createServerClient()
+    const supabase = createServerClient()
 
     const { data: menuItems, error } = await supabase
       .from("menu_items")
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, price, category, image_url } = body
 
-    const supabase = await createServerClient()
+    const supabase = createServerClient()
 
     const { data: menuItem, error } = await supabase
       .from("menu_items")

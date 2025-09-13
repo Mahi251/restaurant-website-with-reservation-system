@@ -125,7 +125,7 @@ export function ReservationForm() {
   const maxDate = addDays(new Date(), 30)
 
   return (
-    <Card>
+    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader>
         <CardTitle className="text-2xl">Reservation Details</CardTitle>
       </CardHeader>
@@ -256,7 +256,14 @@ export function ReservationForm() {
           )}
 
           <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-            {isLoading ? "Creating Reservation..." : "Create Reservation"}
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                Creating Reservation...
+              </div>
+            ) : (
+              "Create Reservation"
+            )}
           </Button>
 
           <p className="text-sm text-muted-foreground text-center">

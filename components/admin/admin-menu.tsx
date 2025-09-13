@@ -21,6 +21,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Edit, Trash2, Search, Filter, DollarSign } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface MenuItem {
   id: string
@@ -49,7 +50,7 @@ export function AdminMenu() {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [isAddingItem, setIsAddingItem] = useState(false)
-
+  const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -86,6 +87,7 @@ export function AdminMenu() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSaving(true)
 
     const itemData = {
       ...formData,
@@ -110,6 +112,8 @@ export function AdminMenu() {
       }
     } catch (error) {
       console.error("Error saving menu item:", error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -166,7 +170,7 @@ export function AdminMenu() {
   })
 
   return (
-    <Card>
+    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader>
         <CardTitle>Menu Management</CardTitle>
         <CardDescription>Add, edit, and manage menu items and categories</CardDescription>
@@ -300,10 +304,19 @@ export function AdminMenu() {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">
-                    {editingItem ? "Update Item" : "Add Item"}
+                  <Button type="submit" className="flex-1" disabled={isSaving}>
+                    {isSaving ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                        {editingItem ? "Updating..." : "Adding..."}
+                      </div>
+                    ) : editingItem ? (
+                      "Update Item"
+                    ) : (
+                      "Add Item"
+                    )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} disabled={isSaving}>
                     Cancel
                   </Button>
                 </div>
@@ -313,7 +326,7 @@ export function AdminMenu() {
         </div>
 
         {/* Menu Items Table */}
-        <div className="border rounded-lg">
+        <div className="border rounded-lg shadow-md">
           <Table>
             <TableHeader>
               <TableRow>
@@ -326,14 +339,31 @@ export function AdminMenu() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-                      <span>Loading menu items...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-48" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8 rounded" />
+                        <Skeleton className="h-8 w-8 rounded" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : filteredItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">
@@ -342,7 +372,7 @@ export function AdminMenu() {
                 </TableRow>
               ) : (
                 filteredItems.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <TableCell>
                       <div>
                         <div className="font-medium flex items-center gap-2">
@@ -372,14 +402,19 @@ export function AdminMenu() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => startEdit(item)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEdit(item)}
+                          className="hover:shadow-md transition-all duration-200"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteMenuItem(item.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 hover:shadow-md transition-all duration-200"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
