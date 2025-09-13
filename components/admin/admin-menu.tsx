@@ -328,7 +328,10 @@ export function AdminMenu() {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    Loading menu items...
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+                      <span>Loading menu items...</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : filteredItems.length === 0 ? (

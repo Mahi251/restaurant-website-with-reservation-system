@@ -2,12 +2,12 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="bg-secondary text-white py-16 px-6">
+    <footer className="bg-primary text-white py-16 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Restaurant Info */}
           <div className="md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">Bella Vista Restaurant</h3>
+            <h3 className="text-2xl font-bold mb-4">Ithiopica Coffee & Eatery</h3>
             <p className="text-white/80 mb-4 leading-relaxed">
               Authentic Italian cuisine in the heart of downtown. Experience the finest flavors and warmest hospitality.
             </p>
@@ -58,7 +58,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/20 pt-8 text-center text-white/60">
-          <p>&copy; 2024 Bella Vista Restaurant. All rights reserved.</p>
+          <p>&copy; 2024 Ithiopica Coffee & Eatery. All rights reserved.</p>
         </div>
       </div>
     </footer>

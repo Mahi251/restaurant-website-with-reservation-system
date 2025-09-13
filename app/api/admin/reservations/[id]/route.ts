@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase/server"
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { status } = await request.json()
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { error } = await supabase.from("reservations").update({ status }).eq("id", params.id)
 
@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { error } = await supabase.from("reservations").delete().eq("id", params.id)
 
