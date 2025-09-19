@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Search, Filter, DollarSign } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Plus, Edit, Trash2, Search, Filter, DollarSign, FolderPlus } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface MenuItem {
@@ -28,7 +29,7 @@ interface MenuItem {
   name: string
   description: string
   price: number
-  category: string
+  category_id: string
   is_available: boolean
   is_featured: boolean
   allergens?: string[]
@@ -50,16 +51,22 @@ export function AdminMenu() {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [isAddingItem, setIsAddingItem] = useState(false)
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
-    category: "",
+    category_id: "",
     is_available: true,
     is_featured: false,
     allergens: "",
     dietary_info: "",
+  })
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: "",
+    description: "",
   })
 
   useEffect(() => {
@@ -109,9 +116,67 @@ export function AdminMenu() {
       if (response.ok) {
         fetchMenuData()
         resetForm()
+        toast({
+          variant: "success",
+          title: "Success",
+          description: `Menu item ${editingItem ? "updated" : "added"} successfully`,
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to ${editingItem ? "update" : "add"} menu item`,
+        })
       }
     } catch (error) {
       console.error("Error saving menu item:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Network error occurred while saving menu item",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSaving(true)
+
+    try {
+      const response = await fetch("/api/admin/menu-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...categoryFormData,
+          display_order: categories.length + 1,
+        }),
+      })
+
+      if (response.ok) {
+        fetchMenuData()
+        setCategoryFormData({ name: "", description: "" })
+        setIsAddingCategory(false)
+        toast({
+          variant: "success",
+          title: "Success",
+          description: "Category added successfully",
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add category",
+        })
+      }
+    } catch (error) {
+      console.error("Error saving category:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Network error occurred while saving category",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -127,9 +192,25 @@ export function AdminMenu() {
 
       if (response.ok) {
         fetchMenuData()
+        toast({
+          variant: "success",
+          title: "Success",
+          description: "Menu item deleted successfully",
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete menu item",
+        })
       }
     } catch (error) {
       console.error("Error deleting menu item:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Network error occurred while deleting menu item",
+      })
     }
   }
 
@@ -138,7 +219,7 @@ export function AdminMenu() {
       name: "",
       description: "",
       price: "",
-      category: "",
+      category_id: "",
       is_available: true,
       is_featured: false,
       allergens: "",
@@ -154,7 +235,7 @@ export function AdminMenu() {
       name: item.name,
       description: item.description,
       price: item.price.toString(),
-      category: item.category,
+      category_id: item.category_id,
       is_available: item.is_available,
       is_featured: item.is_featured,
       allergens: item.allergens?.join(", ") || "",
@@ -163,9 +244,14 @@ export function AdminMenu() {
     setIsAddingItem(true)
   }
 
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find((cat) => cat.id === categoryId)
+    return category ? category.name : categoryId
+  }
+
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
+    const matchesCategory = categoryFilter === "all" || item.category_id === categoryFilter
     return matchesSearch && matchesCategory
   })
 
@@ -197,12 +283,68 @@ export function AdminMenu() {
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category.id} value={category.name}>
+                <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setIsAddingCategory(true)}>
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Add Category
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add New Category</DialogTitle>
+                <DialogDescription>Create a new menu category</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCategorySubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="category-name">Category Name</Label>
+                  <Input
+                    id="category-name"
+                    value={categoryFormData.name}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category-description">Description</Label>
+                  <Textarea
+                    id="category-description"
+                    value={categoryFormData.description}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" className="flex-1" disabled={isSaving}>
+                    {isSaving ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                        Adding...
+                      </div>
+                    ) : (
+                      "Add Category"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setCategoryFormData({ name: "", description: "" })
+                      setIsAddingCategory(false)
+                    }}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsAddingItem(true)}>
@@ -251,15 +393,15 @@ export function AdminMenu() {
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      value={formData.category_id}
+                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -387,7 +529,7 @@ export function AdminMenu() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.category}</Badge>
+                      <Badge variant="outline">{getCategoryName(item.category_id)}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

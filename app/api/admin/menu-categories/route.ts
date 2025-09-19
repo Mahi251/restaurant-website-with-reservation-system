@@ -1,30 +1,35 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  try {
-    const supabase = createServerClient()
 
-    // Get distinct categories from menu_items table
-    const { data: categories, error } = await supabase.from("menu_items").select("category").not("category", "is", null)
+  try {
+    const supabase = await createServerClient();
+
+    // Use a join to fetch menu items and their corresponding category names.
+    const { data: menuItems, error } = await supabase
+      .from("menu_items")
+      .select(`
+        *, 
+        menu_categories (
+          name
+        )
+      `);
 
     if (error) {
-      console.error("Error fetching menu categories:", error)
-      return NextResponse.json({ error: "Failed to fetch menu categories" }, { status: 500 })
+      console.error("Error fetching menu items:", error);
+      return NextResponse.json({ error: "Failed to fetch menu items" }, { status: 500 });
     }
 
-    // Extract unique categories
-    const uniqueCategories = [...new Set(categories?.map((item) => item.category) || [])]
+    // Format the data to make it easier to use on the frontend.
+    const formattedItems = menuItems.map(item => ({
+      ...item,
+      category_name: item.menu_categories.name
+    }));
 
-    // Return categories in the expected format
-    const formattedCategories = uniqueCategories.map((category) => ({
-      id: category,
-      name: category,
-    }))
-
-    return NextResponse.json(formattedCategories)
+    return NextResponse.json(formattedItems);
   } catch (error) {
-    console.error("Error fetching menu categories:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error fetching menu items:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

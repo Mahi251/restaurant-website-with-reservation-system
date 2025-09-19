@@ -6,7 +6,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const { name, description, price, category, image_url } = body
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { data: menuItem, error } = await supabase
       .from("menu_items")
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { error } = await supabase.from("menu_items").delete().eq("id", params.id)
 
