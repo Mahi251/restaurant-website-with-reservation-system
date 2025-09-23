@@ -14,18 +14,7 @@ export async function GET() {
     // Fetch total reservations
     const { data: totalReservations } = await supabase.from("reservations").select("id")
 
-    const { data: categories } = await supabase.from("menu_categories").select("name")
-
-    let totalMenuItems = 0
-    for (const category of categories || []) {
-      const tableName = `menu_${category.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
-      try {
-        const { count } = await supabase.from(tableName).select("*", { count: "exact", head: true })
-        totalMenuItems += count || 0
-      } catch {
-        // Continue if table doesn't exist
-      }
-    }
+    const { data: menuItems } = await supabase.from("menu_items").select("id")
 
     // Fetch average party size
     const { data: partySizes } = await supabase.from("reservations").select("party_size")
@@ -36,7 +25,7 @@ export async function GET() {
     return NextResponse.json({
       todayReservations: todayReservations?.length || 0,
       totalReservations: totalReservations?.length || 0,
-      totalMenuItems,
+      totalMenuItems: menuItems?.length || 0,
       avgPartySize: Math.round(avgPartySize * 10) / 10,
     })
   } catch (error) {

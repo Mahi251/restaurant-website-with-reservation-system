@@ -1,44 +1,34 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = await createClient()
 
-    const { data: categories, error: categoriesError } = await supabase
-      .from("menu_categories")
-      .select("*")
+    const { data: menuItems, error } = await supabase
+      .from("menu_items")
+      .select(`
+        *,
+        menu_categories!inner(
+          name,
+          display_order
+        )
+      `)
       .order("display_order", { ascending: true })
 
-    if (categoriesError) {
-      console.error("Error fetching categories:", categoriesError)
-      return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 })
+    if (error) {
+      console.error("Error fetching menu items:", error)
+      return NextResponse.json({ error: "Failed to fetch menu items" }, { status: 500 })
     }
 
-    // Fetch menu items from all category tables
-    const allMenuItems = []
+    // Transform the data to include category name
+    const transformedItems =
+      menuItems?.map((item) => ({
+        ...item,
+        category: item.menu_categories.name,
+      })) || []
 
-    for (const category of categories || []) {
-      const tableName = `menu_${category.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
-
-      try {
-        const { data: items, error } = await supabase.from(tableName).select("*").order("name", { ascending: true })
-
-        if (!error && items) {
-          // Add category name to each item
-          const itemsWithCategory = items.map((item) => ({
-            ...item,
-            category: category.name,
-          }))
-          allMenuItems.push(...itemsWithCategory)
-        }
-      } catch (error) {
-        console.error(`Error fetching items from ${tableName}:`, error)
-        // Continue with other categories even if one fails
-      }
-    }
-
-    return NextResponse.json(allMenuItems)
+    return NextResponse.json(transformedItems)
   } catch (error) {
     console.error("Error fetching menu items:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -48,30 +38,34 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, price, category, is_available, is_featured, allergens, dietary_info } = body
+    const { name, description, price, category_id, is_available, is_featured, allergens, dietary_info, image_url } =
+      body
 
-    if (!category) {
-      return NextResponse.json({ error: "Category is required" }, { status: 400 })
+    if (!category_id) {
+      return NextResponse.json({ error: "Category ID is required" }, { status: 400 })
     }
 
-    const supabase = createServerClient()
-
-    const tableName = `menu_${category.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
+    const supabase = await createClient()
 
     const { data: menuItem, error } = await supabase
-      .from(tableName)
+      .from("menu_items")
       .insert([
         {
           name,
           description,
           price,
+          category_id,
+          image_url,
           is_available: is_available ?? true,
           is_featured: is_featured ?? false,
           allergens: allergens || [],
           dietary_info: dietary_info || [],
         },
       ])
-      .select()
+      .select(`
+        *,
+        menu_categories!inner(name)
+      `)
       .single()
 
     if (error) {
@@ -79,10 +73,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create menu item" }, { status: 500 })
     }
 
-    // Add category name to response
+    // Transform response to include category name
     const menuItemWithCategory = {
       ...menuItem,
-      category,
+      category: menuItem.menu_categories.name,
     }
 
     return NextResponse.json(menuItemWithCategory)

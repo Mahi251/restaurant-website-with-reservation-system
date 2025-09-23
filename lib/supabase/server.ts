@@ -28,3 +28,4 @@ export async function createClient() {
 }
 
 export { createClient as createServerClient }
+export default createClient

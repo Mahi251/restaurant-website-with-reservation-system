@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { data: categories, error } = await supabase
       .from("menu_categories")
@@ -17,9 +17,11 @@ export async function GET() {
 
     const categoriesWithCount = await Promise.all(
       (categories || []).map(async (category) => {
-        const tableName = `menu_${category.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
         try {
-          const { count } = await supabase.from(tableName).select("*", { count: "exact", head: true })
+          const { count } = await supabase
+            .from("menu_items")
+            .select("*", { count: "exact", head: true })
+            .eq("category_id", category.id)
 
           return {
             ...category,
@@ -43,7 +45,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     const { name, description } = await request.json()
 
     if (!name) {
@@ -77,42 +79,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create menu category" }, { status: 500 })
     }
 
-    const tableName = `menu_${name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
+    // Categories are just metadata now, items reference them via category_id
 
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS ${tableName} (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        is_available BOOLEAN DEFAULT true,
-        is_featured BOOLEAN DEFAULT false,
-        allergens TEXT[],
-        dietary_info TEXT[],
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-      
-      -- Enable RLS
-      ALTER TABLE ${tableName} ENABLE ROW LEVEL SECURITY;
-      
-      -- Create policies for the table
-      CREATE POLICY "Allow all operations for authenticated users" ON ${tableName}
-        FOR ALL USING (true);
-    `
-
-    const { error: tableError } = await supabase.rpc("execute_sql", {
-      sql_query: createTableQuery,
+    return NextResponse.json({
+      ...category,
+      item_count: 0,
     })
-
-    if (tableError) {
-      console.error("Error creating category table:", tableError)
-      // Clean up the category if table creation failed
-      await supabase.from("menu_categories").delete().eq("id", category.id)
-      return NextResponse.json({ error: "Failed to create category table" }, { status: 500 })
-    }
-
-    return NextResponse.json(category)
   } catch (error) {
     console.error("Error creating menu category:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
