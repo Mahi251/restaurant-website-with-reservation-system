@@ -20,20 +20,22 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
-import { Plus, Edit, Trash2, Search, Filter, DollarSign, FolderPlus } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Filter, DollarSign, FolderPlus, Upload, X } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { CategoryManager } from "./category-manager"
+import { createBrowserClient } from "@supabase/ssr"
 
 interface MenuItem {
   id: string
   name: string
   description: string
   price: number
-  category_id: string
+  category: string
   is_available: boolean
   is_featured: boolean
   allergens?: string[]
   dietary_info?: string[]
+  image_url?: string
 }
 
 interface MenuCategory {
@@ -53,21 +55,32 @@ export function AdminMenu() {
   const [isAddingItem, setIsAddingItem] = useState(false)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const { toast } = useToast()
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [buttonLoading, setButtonLoading] = useState<{ [key: string]: boolean }>({})
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
-    category_id: "",
+    category: "",
     is_available: true,
     is_featured: false,
     allergens: "",
     dietary_info: "",
+    image_url: "",
   })
   const [categoryFormData, setCategoryFormData] = useState({
     name: "",
     description: "",
   })
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
 
   useEffect(() => {
     fetchMenuData()
@@ -96,11 +109,21 @@ export function AdminMenu() {
     e.preventDefault()
     setIsSaving(true)
 
+    let imageUrl = formData.image_url || ""
+
+    if (imageFile) {
+      const uploadedUrl = await uploadImage(imageFile)
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl
+      }
+    }
+
     const itemData = {
       ...formData,
       price: Number.parseFloat(formData.price),
       allergens: formData.allergens ? formData.allergens.split(",").map((s) => s.trim()) : [],
       dietary_info: formData.dietary_info ? formData.dietary_info.split(",").map((s) => s.trim()) : [],
+      image_url: imageUrl,
     }
 
     try {
@@ -116,25 +139,9 @@ export function AdminMenu() {
       if (response.ok) {
         fetchMenuData()
         resetForm()
-        toast({
-          variant: "success",
-          title: "Success",
-          description: `Menu item ${editingItem ? "updated" : "added"} successfully`,
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: `Failed to ${editingItem ? "update" : "add"} menu item`,
-        })
       }
     } catch (error) {
       console.error("Error saving menu item:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Network error occurred while saving menu item",
-      })
     } finally {
       setIsSaving(false)
     }
@@ -148,35 +155,16 @@ export function AdminMenu() {
       const response = await fetch("/api/admin/menu-categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...categoryFormData,
-          display_order: categories.length + 1,
-        }),
+        body: JSON.stringify(categoryFormData),
       })
 
       if (response.ok) {
         fetchMenuData()
         setCategoryFormData({ name: "", description: "" })
         setIsAddingCategory(false)
-        toast({
-          variant: "success",
-          title: "Success",
-          description: "Category added successfully",
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to add category",
-        })
       }
     } catch (error) {
-      console.error("Error saving category:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Network error occurred while saving category",
-      })
+      console.error("Error creating category:", error)
     } finally {
       setIsSaving(false)
     }
@@ -185,6 +173,7 @@ export function AdminMenu() {
   const deleteMenuItem = async (id: string) => {
     if (!confirm("Are you sure you want to delete this menu item?")) return
 
+    setIsDeleting(id)
     try {
       const response = await fetch(`/api/admin/menu-items/${id}`, {
         method: "DELETE",
@@ -192,25 +181,54 @@ export function AdminMenu() {
 
       if (response.ok) {
         fetchMenuData()
-        toast({
-          variant: "success",
-          title: "Success",
-          description: "Menu item deleted successfully",
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to delete menu item",
-        })
       }
     } catch (error) {
       console.error("Error deleting menu item:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Network error occurred while deleting menu item",
-      })
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setFormData({ ...formData, image_url: "" })
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setIsUploadingImage(true)
+      const fileExt = file.name.split(".").pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `menu-items/${fileName}`
+
+      const { error: uploadError } = await supabase.storage.from("menu-images").upload(filePath, file)
+
+      if (uploadError) {
+        console.error("Error uploading image:", uploadError)
+        return null
+      }
+
+      const { data } = supabase.storage.from("menu-images").getPublicUrl(filePath)
+
+      return data.publicUrl
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      return null
+    } finally {
+      setIsUploadingImage(false)
     }
   }
 
@@ -219,14 +237,17 @@ export function AdminMenu() {
       name: "",
       description: "",
       price: "",
-      category_id: "",
+      category: "",
       is_available: true,
       is_featured: false,
       allergens: "",
       dietary_info: "",
+      image_url: "",
     })
     setEditingItem(null)
     setIsAddingItem(false)
+    setImageFile(null)
+    setImagePreview(null)
   }
 
   const startEdit = (item: MenuItem) => {
@@ -235,23 +256,22 @@ export function AdminMenu() {
       name: item.name,
       description: item.description,
       price: item.price.toString(),
-      category_id: item.category_id,
+      category: item.category,
       is_available: item.is_available,
       is_featured: item.is_featured,
       allergens: item.allergens?.join(", ") || "",
       dietary_info: item.dietary_info?.join(", ") || "",
+      image_url: item.image_url || "",
     })
+    if (item.image_url) {
+      setImagePreview(item.image_url)
+    }
     setIsAddingItem(true)
-  }
-
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find((cat) => cat.id === categoryId)
-    return category ? category.name : categoryId
   }
 
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || item.category_id === categoryFilter
+    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
     return matchesSearch && matchesCategory
   })
 
@@ -283,68 +303,28 @@ export function AdminMenu() {
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
+                <SelectItem key={category.id} value={category.name}>
                   {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setIsAddingCategory(true)}>
-                <FolderPlus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Category</DialogTitle>
-                <DialogDescription>Create a new menu category</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCategorySubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="category-name">Category Name</Label>
-                  <Input
-                    id="category-name"
-                    value={categoryFormData.name}
-                    onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category-description">Description</Label>
-                  <Textarea
-                    id="category-description"
-                    value={categoryFormData.description}
-                    onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
-                  />
-                </div>
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1" disabled={isSaving}>
-                    {isSaving ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                        Adding...
-                      </div>
-                    ) : (
-                      "Add Category"
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setCategoryFormData({ name: "", description: "" })
-                      setIsAddingCategory(false)
-                    }}
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowCategoryManager(true)}
+            className="hover:shadow-md transition-all duration-200"
+          >
+            <FolderPlus className="h-4 w-4 mr-2" />
+            Manage Categories
+          </Button>
+
+          <CategoryManager
+            isOpen={showCategoryManager}
+            onClose={() => setShowCategoryManager(false)}
+            onCategoryChange={fetchMenuData}
+          />
+
           <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsAddingItem(true)}>
@@ -352,7 +332,7 @@ export function AdminMenu() {
                 Add Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</DialogTitle>
                 <DialogDescription>
@@ -378,6 +358,41 @@ export function AdminMenu() {
                     required
                   />
                 </div>
+                <div>
+                  <Label htmlFor="image">Menu Item Image</Label>
+                  <div className="space-y-4">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={imagePreview || "/placeholder.svg"}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={removeImage}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <p className="text-sm text-gray-600 mb-2">Upload an image for this menu item</p>
+                        <Input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="max-w-xs mx-auto"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="price">Price ($)</Label>
@@ -393,15 +408,15 @@ export function AdminMenu() {
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select
-                      value={formData.category_id}
-                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.name}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -446,11 +461,11 @@ export function AdminMenu() {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1" disabled={isSaving}>
-                    {isSaving ? (
+                  <Button type="submit" className="flex-1" disabled={isSaving || isUploadingImage}>
+                    {isSaving || isUploadingImage ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                        {editingItem ? "Updating..." : "Adding..."}
+                        {isUploadingImage ? "Uploading..." : editingItem ? "Updating..." : "Adding..."}
                       </div>
                     ) : editingItem ? (
                       "Update Item"
@@ -458,7 +473,7 @@ export function AdminMenu() {
                       "Add Item"
                     )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm} disabled={isSaving}>
+                  <Button type="button" variant="outline" onClick={resetForm} disabled={isSaving || isUploadingImage}>
                     Cancel
                   </Button>
                 </div>
@@ -484,9 +499,12 @@ export function AdminMenu() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-48" />
+                      <div className="flex gap-3">
+                        <Skeleton className="h-12 w-12 rounded" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -516,20 +534,33 @@ export function AdminMenu() {
                 filteredItems.map((item) => (
                   <TableRow key={item.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <TableCell>
-                      <div>
-                        <div className="font-medium flex items-center gap-2">
-                          {item.name}
-                          {item.is_featured && (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
-                              Featured
-                            </Badge>
-                          )}
+                      <div className="flex gap-3">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url || "/placeholder.svg"}
+                            alt={item.name}
+                            className="h-12 w-12 object-cover rounded border"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 bg-gray-100 rounded border flex items-center justify-center">
+                            <Upload className="h-4 w-4 text-gray-400" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            {item.name}
+                            {item.is_featured && (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 line-clamp-2">{item.description}</div>
                         </div>
-                        <div className="text-sm text-gray-500 line-clamp-2">{item.description}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{getCategoryName(item.category_id)}</Badge>
+                      <Badge variant="outline">{item.category}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
@@ -549,6 +580,7 @@ export function AdminMenu() {
                           size="sm"
                           onClick={() => startEdit(item)}
                           className="hover:shadow-md transition-all duration-200"
+                          disabled={isSaving}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -557,8 +589,13 @@ export function AdminMenu() {
                           size="sm"
                           onClick={() => deleteMenuItem(item.id)}
                           className="text-red-600 hover:text-red-700 hover:shadow-md transition-all duration-200"
+                          disabled={isDeleting === item.id}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {isDeleting === item.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>

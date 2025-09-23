@@ -7,7 +7,6 @@ import "./globals.css"
 import { Suspense } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ReservationPolicy } from "@/components/reservation-policy"
 
 export const metadata: Metadata = {
   title: "Bella Vista Restaurant - Authentic Italian Cuisine",

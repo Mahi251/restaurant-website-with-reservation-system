@@ -16,7 +16,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Eye, Trash2, Search, Filter, Calendar, Clock, Users, Phone, Mail, ScaleIcon as Skeleton } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 
 interface Reservation {
   id: string
@@ -39,7 +38,6 @@ export function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
-  const { toast } = useToast()
 
   useEffect(() => {
     fetchReservations()
@@ -70,25 +68,9 @@ export function AdminReservations() {
 
       if (response.ok) {
         fetchReservations()
-        toast({
-          variant: "success",
-          title: "Success",
-          description: `Reservation ${status} successfully`,
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to update reservation status",
-        })
       }
     } catch (error) {
       console.error("Error updating reservation:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Network error occurred while updating reservation",
-      })
     } finally {
       setUpdatingStatus(null)
     }
@@ -104,25 +86,9 @@ export function AdminReservations() {
 
       if (response.ok) {
         fetchReservations()
-        toast({
-          variant: "success",
-          title: "Success",
-          description: "Reservation deleted successfully",
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to delete reservation",
-        })
       }
     } catch (error) {
       console.error("Error deleting reservation:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Network error occurred while deleting reservation",
-      })
     }
   }
 

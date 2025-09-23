@@ -1,5 +1,4 @@
 import { ReservationForm } from "@/components/reservation-form"
-// import { ReservationPolicy } from "@/components/reservation-policy"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -13,7 +12,7 @@ export default function ReservationsPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">Make a Reservation</h1>
             <p className="text-xl text-muted-foreground text-pretty max-w-2xl mx-auto leading-relaxed">
@@ -25,16 +24,16 @@ export default function ReservationsPage() {
       </header>
 
       {/* Reservation Form */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Form */}
-          <div className="lg:col-span-2 w-full">
+          <div className="lg:col-span-2">
             <ReservationForm />
           </div>
 
           {/* Restaurant Info */}
-          <div className="space-y-8 w-full">
-            <div className="bg-card p-6 rounded-lg shadow-sm">
+          <div className="space-y-8">
+            <div className="bg-card p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-foreground mb-4">Restaurant Hours</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -52,7 +51,7 @@ export default function ReservationsPage() {
               </div>
             </div>
 
-            <div className="bg-card p-6 rounded-lg shadow-sm">
+            <div className="bg-card p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-foreground mb-4">Contact Information</h3>
               <div className="space-y-3 text-sm">
                 <div>
@@ -72,6 +71,16 @@ export default function ReservationsPage() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg">
+              <h3 className="text-xl font-semibold text-foreground mb-4">Reservation Policy</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• Reservations can be made up to 30 days in advance</li>
+                <li>• Maximum party size is 12 guests</li>
+                <li>• Please arrive within 15 minutes of your reservation time</li>
+                <li>• Cancellations must be made at least 2 hours in advance</li>
+              </ul>
             </div>
 
             <Button asChild variant="outline" className="w-full bg-transparent">

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Password reset email sent to Mahiimran2049@gmail.com",
     })
-  } catch (error) {length
+  } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

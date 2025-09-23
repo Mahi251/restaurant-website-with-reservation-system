@@ -16,7 +16,7 @@ export function Header() {
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="bg-primary text-white py-2 px-6">
+      <div className="bg-secondary text-white py-2 px-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
@@ -37,7 +37,7 @@ export function Header() {
       {/* Main navigation */}
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center py-4">
-          <Link href="/" className="text-2xl font-bold text-primary hover:text-secondary transition-colors">
+          <Link href="/" className="text-2xl font-bold text-secondary hover:text-primary transition-colors">
             Ithiopica Coffee & Eatery
           </Link>
 

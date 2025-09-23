@@ -7,39 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
 import { Settings, Clock, Save } from "lucide-react"
 
 export function AdminSettings() {
-  const { toast } = useToast()
-
-  const handleSaveInformation = () => {
-    // Simulate API call
-    toast({
-      variant: "success",
-      title: "Success",
-      description: "Restaurant information saved successfully",
-    })
-  }
-
-  const handleSaveHours = () => {
-    // Simulate API call
-    toast({
-      variant: "success",
-      title: "Success",
-      description: "Operating hours saved successfully",
-    })
-  }
-
-  const handleSaveSettings = () => {
-    // Simulate API call
-    toast({
-      variant: "success",
-      title: "Success",
-      description: "Reservation settings saved successfully",
-    })
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -80,7 +50,7 @@ export function AdminSettings() {
                 rows={3}
               />
             </div>
-            <Button className="bg-rose-600 hover:bg-rose-700" onClick={handleSaveInformation}>
+            <Button className="bg-rose-600 hover:bg-rose-700">
               <Save className="h-4 w-4 mr-2" />
               Save Information
             </Button>
@@ -112,7 +82,7 @@ export function AdminSettings() {
                 </div>
               </div>
             ))}
-            <Button className="bg-rose-600 hover:bg-rose-700" onClick={handleSaveHours}>
+            <Button className="bg-rose-600 hover:bg-rose-700">
               <Save className="h-4 w-4 mr-2" />
               Save Hours
             </Button>
@@ -170,7 +140,7 @@ export function AdminSettings() {
                 <Switch defaultChecked />
               </div>
             </div>
-            <Button className="bg-rose-600 hover:bg-rose-700" onClick={handleSaveSettings}>
+            <Button className="bg-rose-600 hover:bg-rose-700">
               <Save className="h-4 w-4 mr-2" />
               Save Settings
             </Button>
